@@ -4,7 +4,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
+#include "MinTNorm.h"
+#include "MaxSNorm.h"
+#include "CentroidDefuzz.h"
 #include "FuzzySystem.h"
 #include "InferenceEngine.h"
 #include "Rule.h"
@@ -20,15 +22,13 @@ private:
 
 public:
 
-    MamdaniSystem() = default;
+    MamdaniSystem();
 
     explicit MamdaniSystem(
         std::shared_ptr<InferenceEngine> engine
     );
 
-    //--------------------------------------------------
-    // Rule Management
-    //--------------------------------------------------
+    //rules related func
 
     void addRule(
         const Rule& rule
@@ -45,9 +45,6 @@ public:
 
     std::size_t ruleCount() const;
 
-    //--------------------------------------------------
-    // Engine
-    //--------------------------------------------------
 
     void setInferenceEngine(
         std::shared_ptr<InferenceEngine> engine
@@ -56,15 +53,9 @@ public:
     const std::shared_ptr<InferenceEngine>&
         getInferenceEngine() const;
 
-    //--------------------------------------------------
-    // Validation
-    //--------------------------------------------------
 
     void validate() const override;
 
-    //--------------------------------------------------
-    // Evaluation
-    //--------------------------------------------------
 
     double evaluate(
         const std::unordered_map<

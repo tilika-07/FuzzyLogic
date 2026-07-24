@@ -1,10 +1,7 @@
 #pragma once
-
 #include <vector>
 #include <string>
-
 #include "FuzzySet.h"
-
 class FuzzyVariable
 {
 private:

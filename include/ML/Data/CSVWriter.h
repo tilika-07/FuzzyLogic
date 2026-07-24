@@ -12,6 +12,7 @@ public:
     static void write(
         const std::string& filename,
         const Dataset& dataset,
-        char delimiter = ','
+        char delimiter = ',',
+        bool lastColumnIsLabel = false
     );
 };

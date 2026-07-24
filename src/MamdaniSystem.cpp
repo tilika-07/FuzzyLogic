@@ -1,14 +1,25 @@
 #include "../include/MamdaniSystem.h"
 
 #include <stdexcept>
-
+MamdaniSystem::MamdaniSystem()
+{
+    engine_ = std::make_shared<InferenceEngine>(
+        std::make_shared<MinTNorm>(),
+        std::make_shared<MaxSNorm>(),
+        std::make_shared<CentroidDefuzz>()
+        );
+}
 MamdaniSystem::MamdaniSystem(
-    std::shared_ptr<InferenceEngine> engine
-)
+    std::shared_ptr<InferenceEngine> engine)
     : engine_(std::move(engine))
 {
+    if (!engine_)
+    {
+        throw std::invalid_argument(
+            "Inference engine cannot be null."
+        );
+    }
 }
-
 void MamdaniSystem::addRule(
     const Rule& rule
 )

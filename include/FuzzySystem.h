@@ -27,7 +27,6 @@ public:
     void addInputVar(
         const InputVar& variable
     );
-
     void removeInputVar(
         const std::string& name
     );

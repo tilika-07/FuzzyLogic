@@ -7,45 +7,30 @@
 Dataset CSVReader::read(
     const std::string& filename,
     bool hasHeader,
+    bool lastColumnIsLabel,
     char delimiter
 )
 {
     std::ifstream file(filename);
-
     if (!file.is_open())
     {
         throw std::runtime_error(
             "Unable to open CSV file: " + filename
         );
     }
-
-    Matrix data;
-    std::vector<std::string> headers;
-
+    
     std::string line;
-
-    //------------------------------------------------------
-    // Read header (optional)
-    //------------------------------------------------------
-
-    if (hasHeader)
+    std::vector<std::string> headers;
+    if (hasHeader && std::getline(file, line))
     {
-        if (!std::getline(file, line))
-        {
-            throw std::runtime_error(
-                "CSV file is empty."
-            );
-        }
-
-        headers =
-            parseHeader(
-                line,
-                delimiter
-            );
+        headers = parseHeader(line, delimiter);
     }
-        //------------------------------------------------------
-        // Read data
-        //------------------------------------------------------
+    Matrix data;
+    
+    std::vector<std::string> labels;
+
+
+       //read daata
 
         size_t expectedColumns = 0;
         bool firstRow = true;
@@ -61,11 +46,44 @@ Dataset CSVReader::read(
                 continue;
             }
 
-            Vector row =
-                parseRow(
-                    line,
-                    delimiter
-                );
+            std::stringstream stream(line);
+
+            std::string token;
+
+            std::vector<std::string> tokens;
+
+            while (std::getline(stream, token, delimiter))
+            {
+                tokens.push_back(token);
+            }
+
+            if (tokens.empty())
+            {
+                rowNumber++;
+                continue;
+            }
+
+            if (lastColumnIsLabel)
+            {
+                labels.push_back(tokens.back());
+                tokens.pop_back();
+            }
+
+            Vector row;
+
+            for (const auto& value : tokens)
+            {
+                try
+                {
+                    row.push_back(std::stod(value));
+                }
+                catch (...)
+                {
+                    throw std::invalid_argument(
+                        "Invalid numeric value: " + value
+                    );
+                }
+            }
 
             if (firstRow)
             {
@@ -86,10 +104,23 @@ Dataset CSVReader::read(
 
             rowNumber++;
         }
+        //if header, read header
 
-        //------------------------------------------------------
-        // Validation
-        //------------------------------------------------------
+        size_t expectedHeaderColumns = expectedColumns;
+
+        if (lastColumnIsLabel)
+        {
+            expectedHeaderColumns++;
+        }
+
+        if (hasHeader &&
+            headers.size() != expectedHeaderColumns)
+        {
+            throw std::invalid_argument(
+                "Header count does not match data columns."
+            );
+        }
+       
 
         if (data.empty())
         {
@@ -97,22 +128,15 @@ Dataset CSVReader::read(
                 "CSV file contains no data."
             );
         }
-
-        if (hasHeader &&
-            headers.size() != expectedColumns)
+        //construction
+        if (lastColumnIsLabel && !headers.empty())
         {
-            throw std::invalid_argument(
-                "Header count does not match data columns."
-            );
+            headers.pop_back();
         }
-
-        //------------------------------------------------------
-        // Construct Dataset
-        //------------------------------------------------------
-
         return Dataset(
             data,
-            headers
+            headers,
+            labels
         );
     }
 

@@ -1,9 +1,7 @@
 #pragma once
-
 #include <memory>
 #include <unordered_map>
 #include <string>
-
 #include "RuleEvaluator.h"
 #include "Aggregator.h"
 #include "Defuzzifier.h"

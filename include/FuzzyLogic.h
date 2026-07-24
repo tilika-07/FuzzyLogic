@@ -1,6 +1,7 @@
+//umbrealla header
 #pragma once
 //membership funcs
-#include "MembershipFunc.h"		//parent class
+#include "MembershipFunc.h"		
 #include "Triangle.h"
 #include "Trapezoidal.h"
 #include "Gaussian.h"
@@ -48,3 +49,17 @@
 #include "MamdaniSystem.h"
 
 #include "SugenoSystem.h"
+//ML
+#include "ML/Clustering/FuzzyCMeans.h"
+#include "ML/Clustering/ClusteringMetrics.h"
+#include "ML/Data/CSVReader.h"
+#include "ML/Data/CSVWriter.h"
+#include "ML/Data/Dataset.h"
+#include "ML/Generation/FuzzySetGenerator.h"
+#include "ML/Preprocessing/MinMaxScaler.h"
+#include "ML/Preprocessing/StandardScaler.h"
+#include "ML/Types.h"
+
+
+//Visualisation
+#include "Visualization/JsonExporter.h"

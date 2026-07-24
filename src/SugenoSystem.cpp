@@ -2,11 +2,25 @@
 
 #include <stdexcept>
 
+SugenoSystem::SugenoSystem()
+{
+    engine_ = std::make_shared<SugenoInference>(
+        RuleEvaluator(),
+        std::make_shared<MinTNorm>(),
+        std::make_shared<MaxSNorm>()
+        );
+}
 SugenoSystem::SugenoSystem(
     std::shared_ptr<SugenoInference> engine
 )
     : engine_(std::move(engine))
 {
+    if (!engine_)
+    {
+        throw std::invalid_argument(
+            "Inference engine cannot be null."
+        );
+    }
 }
 
 void SugenoSystem::addRule(

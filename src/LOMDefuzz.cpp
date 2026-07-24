@@ -1,5 +1,4 @@
 #include "../include/LOMDefuzz.h"
-
 #include <algorithm>
 #include <stdexcept>
 

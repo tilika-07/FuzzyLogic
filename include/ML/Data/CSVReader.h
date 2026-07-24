@@ -10,6 +10,7 @@ public:
     static Dataset read(
         const std::string& filename,
         bool hasHeader = true,
+        bool lastColumnIsLabel=false,
         char delimiter = ','
     );
 private:

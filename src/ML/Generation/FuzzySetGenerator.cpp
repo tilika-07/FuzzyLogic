@@ -13,10 +13,30 @@ FuzzySetGenerator::computeClusterInformation(
     double fuzziness
 )
 {
+    if (dataset.getNumSamples() == 0)
+    {
+        throw std::invalid_argument("Dataset is empty.");
+    }
+
+    if (dataset.getNumFeatures() == 0)
+    {
+        throw std::invalid_argument("Dataset has no features.");
+    }
+
     if (featureIndex >= dataset.getNumFeatures())
     {
-        throw std::out_of_range(
-            "Feature index out of range.");
+        throw std::out_of_range("Feature index out of range.");
+    }
+
+    if (numSets <= 0)
+    {
+        throw std::invalid_argument("Number of fuzzy sets must be positive.");
+    }
+
+    if (static_cast<size_t>(numSets) > dataset.getNumSamples())
+    {
+        throw std::invalid_argument(
+            "Number of fuzzy sets cannot exceed number of samples.");
     }
     ClusterInformation info;
     info.featureData =dataset.getFeature(featureIndex);
@@ -46,7 +66,23 @@ FuzzySetGenerator::computeClusterInformation(
         }
     );
     info.memberships =fcm.getMemberships();
+    Vector centers;
+    centers.reserve(centerMatrix.size());
 
+    for (const auto& c : centerMatrix)
+    {
+        centers.push_back(c[0]);
+    }
+    Vector sigmas = computeSigmas(
+        info.featureData,
+        info.clusters,
+        info.memberships,
+        fuzziness
+    );
+    for (auto& cluster : info.clusters)
+    {
+        cluster.sigma = sigmas[cluster.originalIndex];
+    }
     if (!dataset.getFeatureNames().empty())
     {
         info.featureName = dataset.getFeatureName(featureIndex);
@@ -122,12 +158,7 @@ FuzzySetGenerator::generateGaussianVariable(
     double fuzziness
 )
 {
-    if (featureIndex >= dataset.getNumFeatures())
-    {
-        throw std::out_of_range(
-            "Feature index out of range."
-        );
-    }
+    
 
     std::string variableName;
 
@@ -231,6 +262,7 @@ FuzzySetGenerator::generateTriangleSets(
     double fuzziness
 )
 {
+    
     auto info =
         computeClusterInformation(
             dataset,
@@ -238,44 +270,108 @@ FuzzySetGenerator::generateTriangleSets(
             numSets,
             fuzziness
         );
-    std::vector<std::shared_ptr<FuzzySet>> fuzzySets;
 
+    Vector sigmas =
+        computeSigmas(
+            info.featureData,
+            info.clusters,
+            info.memberships,
+            fuzziness
+        );
+
+    std::vector<std::shared_ptr<FuzzySet>> fuzzySets;
     fuzzySets.reserve(numSets);
 
-    for (int i = 0; i < numSets; i++)
+    constexpr double overlapFactor = 0.25;
+    if (numSets == 1)
     {
+        double center = (info.minimum + info.maximum) / 2.0;
+
+        fuzzySets.push_back(
+            std::make_shared<FuzzySet>(
+                info.featureName + "_1",
+                std::make_shared<Triangle>(
+                    info.featureName + "_1",
+                    info.minimum,
+                    center,
+                    info.maximum
+                    )
+                )
+        );
+
+        return fuzzySets;
+    }
+    for (int i = 0; i < numSets; ++i)
+    {
+        double center = info.clusters[i].center;
+        double sigma = sigmas[i];
+
         double left;
-        double peak = info.clusters[i].center;
         double right;
 
         if (i == 0)
         {
-            left = info.minimum;
-        }
-        else
-        {
-            left =
-                (info.clusters[i - 1].center + info.clusters[i].center) / 2.0;
-        }
+            double rightMid =
+                (center +
+                    info.clusters[i + 1].center) / 2.0;
 
-        if (i == numSets - 1)
+            left = info.minimum;
+
+            right =
+                std::min(
+                    info.maximum,
+                    rightMid + overlapFactor * sigma
+                );
+        }
+        else if (i == numSets - 1)
         {
+            double leftMid =
+                (info.clusters[i - 1].center +
+                    center) / 2.0;
+
+            left =
+                std::max(
+                    info.minimum,
+                    leftMid - overlapFactor * sigma
+                );
+
             right = info.maximum;
         }
         else
         {
-            right =
-                (info.clusters[i].center + info.clusters[i + 1].center) / 2.0;
+            double leftMid =
+                (info.clusters[i - 1].center +
+                    center) / 2.0;
+
+            double rightMid =
+                (center +
+                    info.clusters[i + 1].center) / 2.0;
+
+            left = leftMid - overlapFactor * sigma;
+            right = rightMid + overlapFactor * sigma;
+        }
+
+        // Ensure a valid triangle.
+        if (left >= center)
+        {
+            left = center - 1e-6;
+        }
+
+        if (right <= center)
+        {
+            right = center + 1e-6;
         }
 
         fuzzySets.push_back(
             std::make_shared<FuzzySet>(
-               info.featureName + "_" + std::to_string(i + 1),
+                info.featureName + "_" +
+                std::to_string(i + 1),
 
                 std::make_shared<Triangle>(
-                    info.featureName + "_" + std::to_string(i + 1),
+                    info.featureName + "_" +
+                    std::to_string(i + 1),
                     left,
-                    peak,
+                    center,
                     right
                     )
                 )
@@ -292,12 +388,7 @@ FuzzySetGenerator::generateTriangleVariable(
     double fuzziness
 )
 {
-    if (featureIndex >= dataset.getNumFeatures())
-    {
-        throw std::out_of_range(
-            "Feature index out of range."
-        );
-    }
+
 
     std::string variableName;
 
@@ -351,61 +442,100 @@ FuzzySetGenerator::generateTrapezoidalSets(
             numSets,
             fuzziness
         );
-    std::vector<std::shared_ptr<FuzzySet>> fuzzySets;
 
+    Vector sigmas =
+        computeSigmas(
+            info.featureData,
+            info.clusters,
+            info.memberships,
+            fuzziness
+        );
+
+    std::vector<std::shared_ptr<FuzzySet>> fuzzySets;
     fuzzySets.reserve(numSets);
 
-    for (int i = 0; i < numSets; i++)
+    constexpr double supportFactor = 0.25;
+    constexpr double plateauFactor = 0.5;
+    if (numSets == 1)
     {
-        double a;
-        double b;
-        double c;
-        double d;
+        fuzzySets.push_back(
+            std::make_shared<FuzzySet>(
+                info.featureName + "_1",
+                std::make_shared<Trapezoidal>(
+                    info.featureName + "_1",
+                    info.minimum,
+                    info.minimum,
+                    info.maximum,
+                    info.maximum
+                    )
+                )
+        );
+
+        return fuzzySets;
+    }
+    for (int i = 0; i < numSets; ++i)
+    {
+        double center = info.clusters[i].center;
+        double sigma = sigmas[i];
+
+        double a, b, c, d;
 
         if (i == 0)
         {
             double rightMid =
-                (info.clusters[0].center + info.clusters[1].center) / 2.0;
+                (center +
+                    info.clusters[i + 1].center) / 2.0;
 
             a = info.minimum;
-            b = info.clusters[0].center;
-            c = info.clusters[0].center;
-            d = rightMid;
+
+            d = std::min(
+                info.maximum,
+                rightMid + supportFactor * sigma
+            );
         }
         else if (i == numSets - 1)
         {
             double leftMid =
-                (info.clusters[i - 1].center + info.clusters[i].center) / 2.0;
-            a = leftMid;
-            b = info.clusters[i].center;
-            c = info.clusters[i].center;
+                (info.clusters[i - 1].center +
+                    center) / 2.0;
+
+            a = std::max(
+                info.minimum,
+                leftMid - supportFactor * sigma
+            );
+
             d = info.maximum;
         }
         else
         {
             double leftMid =
-                (info.clusters[i - 1].center + info.clusters[i].center) / 2.0;
+                (info.clusters[i - 1].center +
+                    center) / 2.0;
 
             double rightMid =
-                (info.clusters[i].center + info.clusters[i + 1].center) / 2.0;
+                (center +
+                    info.clusters[i + 1].center) / 2.0;
 
-            double overlap =
-                (rightMid - leftMid) / 4.0;
+            a = leftMid - supportFactor * sigma;
+            d = rightMid + supportFactor * sigma;
+        }
 
-            a = leftMid;
-            b = info.clusters[i].center - overlap;
-            c = info.clusters[i].center + overlap;
-            d = rightMid;
+        b = std::max(a, center - plateauFactor * sigma);
+        c = std::min(d, center + plateauFactor * sigma);
+
+        if (b > c)
+        {
+            b = c = center;
         }
 
         fuzzySets.push_back(
             std::make_shared<FuzzySet>(
-                info.featureName +
-                "_" +
+                info.featureName + "_" +
                 std::to_string(i + 1),
 
                 std::make_shared<Trapezoidal>(
-                    info.featureName + "_" + std::to_string(i + 1),
+                    info.featureName + "_" +
+                    std::to_string(i + 1),
                     a,
                     b,
                     c,
@@ -425,12 +555,7 @@ FuzzySetGenerator::generateTrapezoidalVariable(
     double fuzziness
 )
 {
-    if (featureIndex >= dataset.getNumFeatures())
-    {
-        throw std::out_of_range(
-            "Feature index out of range."
-        );
-    }
+   
 
     std::string variableName;
 

@@ -5,14 +5,29 @@ project(FuzzyLogicLibrary)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ============================================================
+
+# Dependencies
+
+
+include(FetchContent)
+
+# GoogleTest
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/heads/main.zip
+)
+
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
 # Library
-# ============================================================
+
 
 add_library(
     fuzzy_logic
 
-    # Membership functions
+    # Membership Functions
     src/Triangle.cpp
     src/Trapezoidal.cpp
     src/Gaussian.cpp
@@ -20,7 +35,7 @@ add_library(
     src/Sigmoid.cpp
     src/Singleton.cpp
 
-    # Variables and sets
+    # Variables
     src/FuzzySet.cpp
     src/FuzzyVariable.cpp
     src/InputVar.cpp
@@ -39,7 +54,7 @@ add_library(
     src/MaxSNorm.cpp
     src/ProbSumSNorm.cpp
 
-    # Inference engine
+    # Inference
     src/Fuzzifier.cpp
     src/RuleEvaluator.cpp
     src/Aggregator.cpp
@@ -60,12 +75,13 @@ add_library(
     src/SugenoSystem.cpp
     src/MamdaniSystem.cpp
 
-    # ========================================================
-    # ML
-    # ========================================================
+
+    # Machine Learning
+
 
     # Clustering
     src/ML/Clustering/FuzzyCMeans.cpp
+    src/ML/Clustering/ClusteringMetrics.cpp
 
     # Data
     src/ML/Data/Dataset.cpp
@@ -78,32 +94,19 @@ add_library(
 
     # Generation
     src/ML/Generation/FuzzySetGenerator.cpp
-)
 
+    # Visualization
+   src/Visualization/JsonExporter.cpp
+)
 target_include_directories(
     fuzzy_logic
     PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
-# ============================================================
-# GoogleTest
-# ============================================================
-
-include(FetchContent)
-
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/refs/heads/main.zip
-)
-
-FetchContent_MakeAvailable(googletest)
-
-enable_testing()
-
-# ============================================================
 # Tests
-# ============================================================
+
 
 add_executable(
     fuzzy_tests
@@ -146,40 +149,78 @@ add_executable(
     tests/test_sugenosystem.cpp
     tests/test_integration.cpp
 
-    # ========================================================
-    # ML Tests
-    # ========================================================
-
+    # ML
     tests/test_fuzzycmeans.cpp
     tests/test_dataset.cpp
     tests/test_csvreader.cpp
     tests/test_csvwriter.cpp
     tests/test_standardscaler.cpp
     tests/test_minmaxscaler.cpp
- tests/test_fuzzysetgenerator.cpp )
+    tests/test_fuzzysetgenerator.cpp
+)
 
 target_link_libraries(
     fuzzy_tests
     PRIVATE
-    fuzzy_logic
-    GTest::gtest_main
+        fuzzy_logic
+        GTest::gtest_main
 )
 
 include(GoogleTest)
-
 gtest_discover_tests(fuzzy_tests)
 
-# ============================================================
+
 # Examples
-# ============================================================
+
 
 add_executable(
-    fcm_example
-    examples/fcm_example.cpp
+    irisExample
+    examples/irisExample.cpp
 )
 
 target_link_libraries(
-    fcm_example
+    irisExample
     PRIVATE
-    fuzzy_logic
+        fuzzy_logic
+)
+
+add_executable(
+    mamdani_example
+    examples/MamdaniExample.cpp
+)
+
+target_link_libraries(
+    mamdani_example
+    PRIVATE
+        fuzzy_logic
+)
+
+add_executable(
+    sugeno_example
+    examples/SugenoExample.cpp
+)
+
+target_link_libraries(
+    sugeno_example
+    PRIVATE
+        fuzzy_logic
+)
+add_executable(
+    membership_visualization
+    examples/membershipVisualisation.cpp
+)
+
+target_link_libraries(
+    membership_visualization
+    PRIVATE fuzzy_logic
+)
+
+add_executable(
+    cluster_visualization
+    examples/clusterVisualisation.cpp
+)
+
+target_link_libraries(
+    cluster_visualization
+    PRIVATE fuzzy_logic
 )

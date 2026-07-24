@@ -2,7 +2,8 @@
 void CSVWriter::write(
     const std::string& filename,
     const Dataset& dataset,
-    char delimiter
+    char delimiter,
+    bool lastColumnIsLabel
 )
 {
     const Matrix& data =
@@ -11,9 +12,7 @@ void CSVWriter::write(
     const auto& headers =
         dataset.getFeatureNames();
 
-    //------------------------------------------------------
-    // Validate dataset
-    //------------------------------------------------------
+    //validation
 
     if (data.empty())
     {
@@ -49,11 +48,7 @@ void CSVWriter::write(
             "Header count does not match number of columns."
         );
     }
-
-    //------------------------------------------------------
-    // Open file
-    //------------------------------------------------------
-
+    //open
     std::ofstream file(filename);
 
     if (!file.is_open())
@@ -65,11 +60,7 @@ void CSVWriter::write(
     file << std::setprecision(
         std::numeric_limits<double>::max_digits10
     );
-
-    //------------------------------------------------------
-    // Write headers
-    //------------------------------------------------------
-
+//if headers, write headers
     if (!headers.empty())
     {
         for (size_t i = 0; i < headers.size(); i++)
@@ -85,9 +76,6 @@ void CSVWriter::write(
         file << '\n';
     }
 
-    //------------------------------------------------------
-    // Write data
-    //------------------------------------------------------
 
     for (const auto& row : data)
     {
@@ -105,9 +93,6 @@ void CSVWriter::write(
         file << '\n';
     }
 
-    //------------------------------------------------------
-    // Verify write succeeded
-    //------------------------------------------------------
 
     if (!file)
     {

@@ -1,8 +1,6 @@
 #include "../include/MOMDefuzz.h"
-
 #include <algorithm>
 #include <stdexcept>
-
 double MOMDefuzz::defuzzify(
     const std::vector<double>& xValues,
     const std::vector<double>& memberships

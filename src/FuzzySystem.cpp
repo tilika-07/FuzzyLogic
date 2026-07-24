@@ -1,11 +1,5 @@
 #include "../include/FuzzySystem.h"
-
 #include <stdexcept>
-
-//
-// Input Variable Management
-//
-
 void FuzzySystem::addInputVar(
     const InputVar& variable
 )
@@ -80,9 +74,7 @@ FuzzySystem::inputCount() const
     return inputVars_.size();
 }
 
-//
-// Output Variable Management
-//
+
 
 void FuzzySystem::addOutputVar(
     const OutputVar& variable
@@ -158,9 +150,7 @@ FuzzySystem::outputCount() const
     return outputVars_.size();
 }
 
-//
-// Validation
-//
+
 
 void FuzzySystem::validate() const
 {
@@ -179,9 +169,6 @@ void FuzzySystem::validate() const
     }
 }
 
-//
-// Utility
-//
 
 void FuzzySystem::clear()
 {

@@ -1,5 +1,4 @@
 #include "../include/InferenceEngine.h"
-
 #include <stdexcept>
 #include <utility>
 

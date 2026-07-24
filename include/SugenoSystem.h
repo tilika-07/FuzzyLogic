@@ -4,7 +4,9 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-
+#include "MinTNorm.h"
+#include "MaxSNorm.h"
+#include "CentroidDefuzz.h"
 #include "FuzzySystem.h"
 #include "SugenoInference.h"
 #include "SugenoRule.h"
@@ -20,15 +22,13 @@ private:
 
 public:
 
-    SugenoSystem() = default;
+    SugenoSystem();
 
     explicit SugenoSystem(
         std::shared_ptr<SugenoInference> engine
     );
 
-    //--------------------------------------------------
-    // Rule Management
-    //--------------------------------------------------
+   //rules
 
     void addRule(
         const SugenoRule& rule
@@ -45,10 +45,6 @@ public:
 
     std::size_t ruleCount() const;
 
-    //--------------------------------------------------
-    // Engine
-    //--------------------------------------------------
-
     void setInferenceEngine(
         std::shared_ptr<SugenoInference> engine
     );
@@ -56,16 +52,10 @@ public:
     const std::shared_ptr<SugenoInference>&
         getInferenceEngine() const;
 
-    //--------------------------------------------------
-    // Validation
-    //--------------------------------------------------
 
     void validate() const override;
 
-    //--------------------------------------------------
-    // Evaluation
-    //--------------------------------------------------
-
+   
     double evaluate(
         const std::unordered_map<
         std::string,

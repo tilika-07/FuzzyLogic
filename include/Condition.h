@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+//used by antecedent, consequent and sugeno consequent
 struct Condition
 {
     std::string variableName;

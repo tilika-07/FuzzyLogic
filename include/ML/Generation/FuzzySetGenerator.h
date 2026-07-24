@@ -58,6 +58,7 @@ private:
     {
         double center;
         size_t originalIndex;
+        double sigma;
     };
 
     struct ClusterInformation
